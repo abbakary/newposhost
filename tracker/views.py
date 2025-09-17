@@ -1220,7 +1220,14 @@ def customer_groups(request: HttpRequest):
         'start_date': start_date,
         'end_date': today,
     }
-    
+
+    # SPA/AJAX partial rendering support
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+    if is_ajax:
+        from django.template.loader import render_to_string
+        html = render_to_string('tracker/partials/customer_groups_content.html', context=context, request=request)
+        return JsonResponse({'success': True, 'html': html})
+
     return render(request, 'tracker/customer_groups.html', context)
 
 @login_required
