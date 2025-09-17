@@ -1,0 +1,122 @@
+<!-- Tire Sales Form -->
+<div class="card mb-4">
+  <div class="card-header bg-soft-success">
+    <h6 class="mb-0"><i class="fa fa-tire me-2"></i>Tire Purchase Details</h6>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <!-- Tire Brand -->
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Brand <span class="text-danger">*</span>
+          </label>
+          <select name="tire_brand" class="form-select" required>
+            <option value="">Select Brand</option>
+            <option value="michelin" {% if form.tire_brand.value == 'michelin' %}selected{% endif %}>Michelin</option>
+            <option value="bridgestone" {% if form.tire_brand.value == 'bridgestone' %}selected{% endif %}>Bridgestone</option>
+            <option value="goodyear" {% if form.tire_brand.value == 'goodyear' %}selected{% endif %}>Goodyear</option>
+            <option value="continental" {% if form.tire_brand.value == 'continental' %}selected{% endif %}>Continental</option>
+            <option value="pirelli" {% if form.tire_brand.value == 'pirelli' %}selected{% endif %}>Pirelli</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tire Type -->
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Tire Type <span class="text-danger">*</span>
+          </label>
+          <select name="tire_type" class="form-select" required>
+            <option value="">Select Type</option>
+            <option value="summer" {% if form.tire_type.value == 'summer' %}selected{% endif %}>Summer</option>
+            <option value="winter" {% if form.tire_type.value == 'winter' %}selected{% endif %}>Winter</option>
+            <option value="all_season" {% if form.tire_type.value == 'all_season' %}selected{% endif %}>All Season</option>
+            <option value="performance" {% if form.tire_type.value == 'performance' %}selected{% endif %}>Performance</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Size -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Width <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <input type="number" name="tire_width" class="form-control" 
+                   min="100" max="400" step="10" required
+                   value="{{ form.tire_width.value|default:'205' }}">
+            <span class="input-group-text">mm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Aspect Ratio <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <input type="number" name="tire_aspect_ratio" class="form-control" 
+                   min="30" max="90" step="5" required
+                   value="{{ form.tire_aspect_ratio.value|default:'55' }}">
+            <span class="input-group-text">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Rim Size <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <input type="number" name="rim_size" class="form-control" 
+                   min="10" max="25" step="0.5" required
+                   value="{{ form.rim_size.value|default:'16' }}">
+            <span class="input-group-text">inch</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Quantity <span class="text-danger">*</span>
+          </label>
+          <input type="number" name="quantity" class="form-control" 
+                 min="1" max="100" required
+                 value="{{ form.quantity.value|default:'4' }}">
+        </div>
+      </div>
+
+      <!-- Condition -->
+      <div class="col-md-6">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Condition <span class="text-danger">*</span>
+          </label>
+          <select name="condition" class="form-select" required>
+            <option value="new" {% if form.condition.value == 'new' %}selected{% endif %}>New</option>
+            <option value="used" {% if form.condition.value == 'used' %}selected{% endif %}>Used</option>
+            <option value="refurbished" {% if form.condition.value == 'refurbished' %}selected{% endif %}>Refurbished</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Additional Notes -->
+      <div class="col-12">
+        <div class="form-group">
+          <label class="form-label fw-500">
+            Special Requests
+          </label>
+          <textarea name="special_requests" class="form-control" rows="2"
+                    placeholder="Any special requests or additional information">{{ form.special_requests.value|default:'' }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
