@@ -1,0 +1,435 @@
+{% load humanize %}
+{% load custom_filters %}
+
+<!-- KPIs Row -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <p class="text-muted mb-0"><i class="fas fa-users text-primary me-2"></i>Customers</p>
+          <span class="badge bg-soft-primary text-primary">Total</span>
+        </div>
+        <h3 class="mb-0">{{ overall_stats.total_customers|default:0|intcomma }}</h3>
+        <div class="mt-2">
+          <span class="text-success small"><i class="fas fa-arrow-up me-1"></i> 12.5%</span>
+          <span class="text-muted small ms-2">vs last period</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <p class="text-muted mb-0"><i class="fas fa-dollar-sign text-success me-2"></i>Revenue</p>
+          <span class="badge bg-soft-success text-success">+18%</span>
+        </div>
+        <h3 class="mb-0">${{ overall_stats.total_revenue|default:0|intcomma }}</h3>
+        <div class="progress mt-2" style="height: 4px;">
+          <div class="progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <p class="text-muted mb-0"><i class="fas fa-shopping-cart text-info me-2"></i>Orders</p>
+          <span class="badge bg-soft-info text-info">Period</span>
+        </div>
+        <h3 class="mb-0">{{ overall_stats.total_orders|default:0|intcomma }}</h3>
+        <div class="d-flex justify-content-between mt-2">
+          <div>
+            <span class="text-success small"><i class="fas fa-arrow-up me-1"></i> 8.2%</span>
+          </div>
+          <div>
+            <span class="text-muted small">{{ time_period|title }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <p class="text-muted mb-0"><i class="fas fa-chart-line text-warning me-2"></i>Avg Order/Cust</p>
+          <span class="badge bg-soft-warning text-warning">+5.2%</span>
+        </div>
+        <h3 class="mb-0">{{ overall_stats.avg_orders_per_customer|default:0|floatformat:1 }}</h3>
+        <div class="progress mt-2" style="height: 4px;">
+          <div class="progress-bar bg-warning" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if selected_group != 'all' %}
+  {% with g=customer_groups|dict_get:selected_group %}
+  {% if g %}
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
+          <div>
+            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>{{ g.name }} Overview</h5>
+            <p class="text-muted small mb-0 mt-1">Performance metrics from {{ start_date }} to {{ end_date }}</p>
+          </div>
+          <div>
+            <span class="badge bg-soft-primary">Updated: {% now "M d, Y" %}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+              <div class="d-flex align-items-center">
+                <div class="bg-soft-primary rounded p-3 me-3">
+                  <i class="fas fa-users text-primary fa-lg"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Total Customers</p>
+                  <h4 class="mb-0">{{ g.total_customers|intcomma }}</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="d-flex align-items-center">
+                <div class="bg-soft-success rounded p-3 me-3">
+                  <i class="fas fa-dollar-sign text-success fa-lg"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Total Revenue</p>
+                  <h4 class="mb-0">${{ g.stats.total_revenue|default:0|intcomma }}</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="d-flex align-items-center">
+                <div class="bg-soft-info rounded p-3 me-3">
+                  <i class="fas fa-shopping-cart text-info fa-lg"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Total Orders</p>
+                  <h4 class="mb-0">{{ g.stats.total_orders|default:0|intcomma }}</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="d-flex align-items-center">
+                <div class="bg-soft-warning rounded p-3 me-3">
+                  <i class="fas fa-check-circle text-warning fa-lg"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Completion Rate</p>
+                  <h4 class="mb-0">{{ g.trends.completion_rate }}%</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed customers table -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
+          <div>
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Customers in {{ g.name }}</h5>
+            <p class="text-muted small mb-0 mt-1">{{ detailed_customers|length }} customers found</p>
+          </div>
+          <div class="d-flex align-items-center flex-wrap">
+            <div class="input-group input-group-sm ms-2" style="max-width: 250px;">
+              <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+              <input type="text" class="form-control border-start-0" placeholder="Search customers...">
+            </div>
+            <div class="dropdown ms-2">
+              <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-sliders-h me-1"></i> Filter
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#">Active Customers</a></li>
+                <li><a class="dropdown-item" href="#">New This Month</a></li>
+                <li><a class="dropdown-item" href="#">High Value</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Clear Filters</a></li>
+              </ul>
+            </div>
+            <a class="btn btn-primary btn-sm ms-2" href="{% url 'tracker:customer_groups_export' %}?group={{ selected_group }}&period={{ time_period }}">
+              <i class="fas fa-download me-1"></i> Export
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" id="cgTable" style="table-layout: fixed; width: 100%">
+              <thead class="bg-light">
+                <tr>
+                  <th style="width: 15%; min-width: 180px;" class="ps-3">Customer</th>
+                  <th style="width: 15%; min-width: 120px;">Contact</th>
+                  <th style="width: 8%; min-width: 80px;" class="text-center">Orders</th>
+                  <th style="width: 15%; min-width: 100px;">Total Spent</th>
+                  <th style="width: 20%; min-width: 150px;">Activity</th>
+                  <th style="width: 12%; min-width: 120px;">Last Order</th>
+                  <th style="width: 10%; min-width: 80px;" class="text-center">Status</th>
+                  <th style="width: 5%; min-width: 50px;" class="text-end pe-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in detailed_customers %}
+                <tr>
+                  <td class="ps-3" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <div class="d-flex align-items-center">
+                      <div class="flex-shrink-0 me-2">
+                        <div class="avatar-xs">
+                          <div class="avatar-title bg-soft-primary text-primary rounded-circle">
+                            {{ c.full_name|slice:":1"|upper }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1 text-truncate">
+                        <div class="text-truncate" title="{{ c.full_name }}">{{ c.full_name|truncatechars:15 }}</div>
+                        <small class="text-muted d-block text-truncate" title="{{ c.code }}">{{ c.code }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <div class="d-flex flex-column">
+                      <span class="text-truncate" title="{{ c.phone|default:'-' }}">{{ c.phone|default:'-' }}</span>
+                      <small class="text-muted text-truncate d-block" title="{{ c.email|default:'' }}">{{ c.email|default:''|truncatechars:20 }}</small>
+                    </div>
+                  </td>
+                  <td class="text-center align-middle">
+                    <span class="badge bg-soft-primary text-primary">{{ c.recent_orders_count }}</span>
+                  </td>
+                  <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <div class="text-truncate" title="${{ c.total_spent|default:0|floatformat:2 }}">${{ c.total_spent|default:0|floatformat:2 }}</div>
+                    <small class="text-muted">{{ c.total_visits }} visits</small>
+                  </td>
+                  <td style="min-width: 150px;">
+                    <div class="d-flex align-items-center">
+                      <div class="progress flex-grow-1 me-2" style="height: 5px; min-width: 50px;">
+                        {% with completion_rate=c.completed_orders|default:0|div:c.recent_orders_count|default:1|mul:100|floatformat:0 %}
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ completion_rate }}%" aria-valuenow="{{ completion_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        {% endwith %}
+                      </div>
+                      <small class="text-muted" style="white-space: nowrap;">{{ c.completed_orders }}/{{ c.recent_orders_count }}</small>
+                    </div>
+                  </td>
+                  <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {% if c.last_order_date %}
+                    <div class="d-flex align-items-center">
+                      <i class="far fa-calendar-alt text-muted me-1"></i>
+                      <span class="text-truncate" title="{{ c.last_order_date|date:'M d, Y' }}">{{ c.last_order_date|date:'M d, Y' }}</span>
+                    </div>
+                    <small class="text-muted">{{ c.last_order_date|timesince }} ago</small>
+                    {% else %}
+                    <span class="text-muted">No orders</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if c.last_order_date %}
+                      {% with days_since_last_order=c.last_order_date|timesince_days %}
+                        {% if days_since_last_order < 30 %}
+                          <span class="badge bg-soft-success text-success">Active</span>
+                        {% elif days_since_last_order < 90 %}
+                          <span class="badge bg-soft-warning text-warning">Warming</span>
+                        {% else %}
+                          <span class="badge bg-soft-danger text-danger">Inactive</span>
+                        {% endif %}
+                      {% endwith %}
+                    {% else %}
+                      <span class="badge bg-soft-secondary text-secondary">New</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center pe-3 align-middle">
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-light rounded-circle p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-ellipsis-v text-muted" style="font-size: 0.75rem;"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                          <a class="dropdown-item" href="{% url 'tracker:customer_detail' c.id %}">
+                            <i class="far fa-user me-2"></i>View Profile
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="{% url 'tracker:create_order_for_customer' c.id %}">
+                            <i class="fas fa-plus-circle me-2"></i>Create Order
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="{% url 'tracker:customer_edit' c.id %}">
+                            <i class="far fa-edit me-2"></i>Edit
+                          </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <a class="dropdown-item text-danger" href="#">
+                            <i class="far fa-trash-alt me-2"></i>Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" class="text-center py-5">
+                    <div class="empty-state">
+                      <i class="fas fa-users-slash fa-3x text-muted mb-4"></i>
+                      <h5>No customers found</h5>
+                      <p class="text-muted">Try adjusting your filters or add a new customer</p>
+                      <a href="#" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add Customer</a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if detailed_customers.has_other_pages %}
+          <div class="d-flex justify-content-between align-items-center p-3 border-top">
+            <div class="text-muted">
+              Showing <span class="fw-semibold">{{ detailed_customers.start_index }}</span> to 
+              <span class="fw-semibold">{{ detailed_customers.end_index }}</span> of 
+              <span class="fw-semibold">{{ detailed_customers.paginator.count }}</span> entries
+            </div>
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm mb-0">
+                {% if detailed_customers.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ detailed_customers.previous_page_number }}" aria-label="Previous" data-cg-link="true">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+                {% for i in detailed_customers.paginator.page_range %}
+                  {% if detailed_customers.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                  {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}" data-cg-link="true">{{ i }}</a></li>
+                  {% endif %}
+                {% endfor %}
+                {% if detailed_customers.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ detailed_customers.next_page_number }}" aria-label="Next" data-cg-link="true">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+{% else %}
+  <div class="row g-4">
+    {% for code, g in customer_groups.items %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 group-card">
+        <div class="card-body p-0 d-flex flex-column">
+          <div class="p-4 border-bottom">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="mb-1">{{ g.name }}</h5>
+                <p class="text-muted small mb-0">{{ g.description|default:"Customer segment" }}</p>
+              </div>
+              <span class="badge bg-soft-primary">{{ g.total_customers }} customers</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="d-flex align-items-center">
+                  <div class="bg-soft-primary rounded p-2 me-3"><i class="fas fa-shopping-cart text-primary"></i></div>
+                  <div>
+                    <p class="text-muted small mb-0">Orders</p>
+                    <h6 class="mb-0">{{ g.stats.total_orders|default:0|intcomma }}</h6>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="d-flex align-items-center">
+                  <div class="bg-soft-success rounded p-2 me-3"><i class="fas fa-dollar-sign text-success"></i></div>
+                  <div>
+                    <p class="text-muted small mb-0">Revenue</p>
+                    <h6 class="mb-0">${{ g.stats.total_revenue|default:0|intcomma }}</h6>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="d-flex align-items-center">
+                  <div class="bg-soft-info rounded p-2 me-3"><i class="fas fa-check-circle text-info"></i></div>
+                  <div>
+                    <p class="text-muted small mb-0">Completion</p>
+                    <h6 class="mb-0">{{ g.trends.completion_rate }}%</h6>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="d-flex align-items-center">
+                  <div class="bg-soft-warning rounded p-2 me-3"><i class="fas fa-chart-line text-warning"></i></div>
+                  <div>
+                    <p class="text-muted small mb-0">Growth</p>
+                    <h6 class="mb-0">+12.5%</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-auto p-3 bg-light rounded-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex">
+                <div class="avatar-group">
+                  <a href="#" class="avatar-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Top Customer">
+                    <div class="avatar-title rounded-circle bg-soft-primary text-primary">
+                      <i class="fas fa-user"></i>
+                    </div>
+                  </a>
+                  <a href="#" class="avatar-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Top Spender">
+                    <div class="avatar-title rounded-circle bg-soft-success text-success">
+                      <i class="fas fa-dollar-sign"></i>
+                    </div>
+                  </a>
+                  <a href="#" class="avatar-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Most Active">
+                    <div class="avatar-title rounded-circle bg-soft-info text-info">
+                      <i class="fas fa-bolt"></i>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <a href="{% url 'tracker:customer_groups' %}?group={{ code }}&period={{ time_period }}&sort={{ sort_by }}" class="btn btn-sm btn-primary" data-cg-link="true">
+                View Details <i class="fas fa-arrow-right ms-1"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card"><div class="card-body"><div class="empty-state">
+        <i class="fas fa-users-slash fa-4x text-muted mb-4"></i>
+        <h5>No Customer Groups Found</h5>
+        <p class="text-muted">You haven't created any customer groups yet.</p>
+        <button class="btn btn-primary"><i class="fas fa-plus me-2"></i>Create Group</button>
+      </div></div></div>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
