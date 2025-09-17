@@ -413,10 +413,10 @@
       <div class="card h-100">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="card-title mb-0">Service Trend</h5>
-          <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-secondary active" data-period="day">Day</button>
-            <button type="button" class="btn btn-outline-secondary" data-period="week">Week</button>
-            <button type="button" class="btn btn-outline-secondary" data-period="month">Month</button>
+          <div class="btn-group btn-group-sm time-period-buttons">
+            <button type="button" class="btn btn-outline-primary time-period-btn active" data-period="daily">Daily</button>
+            <button type="button" class="btn btn-outline-primary time-period-btn" data-period="weekly">Weekly</button>
+            <button type="button" class="btn btn-outline-primary time-period-btn" data-period="monthly">Monthly</button>
           </div>
         </div>
         <div class="card-body">
@@ -1281,8 +1281,94 @@ function initServicePerformanceChart() {
   });
 
   // Service Trend Chart
+  let serviceTrendChart = null;
+  
   function initServiceTrendChart() {
-    const chart = echarts.init(document.getElementById('serviceTrendChart'));
+    const chartElement = document.getElementById('serviceTrendChart');
+    if (!chartElement) return;
+    
+    // Initialize the chart
+    serviceTrendChart = echarts.init(chartElement);
+    updateServiceTrendChart('monthly'); // Default to monthly view
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (serviceTrendChart) {
+        serviceTrendChart.resize();
+      }
+    });
+    
+    // Add click handlers for time period buttons
+    document.querySelectorAll('.time-period-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const period = this.getAttribute('data-period');
+        updateServiceTrendChart(period);
+        
+        // Update active state
+        document.querySelectorAll('.time-period-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  }
+  
+  function updateServiceTrendChart(period) {
+    if (!serviceTrendChart) return;
+    
+    // Get the appropriate data based on the selected period
+    let labels = [];
+    let seriesData = [];
+    
+    if (period === 'daily') {
+      // Last 7 days
+      const today = new Date();
+      labels = Array.from({length: 7}, (_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() - (6 - i));
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+      
+      // This is a simplified example - in a real app, you would fetch this data from the server
+      // based on the selected period
+      seriesData = [
+        { name: 'Sales', data: [12, 19, 15, 27, 22, 18, 24] },
+        { name: 'Service', data: [8, 12, 10, 15, 20, 14, 18] },
+        { name: 'Consultation', data: [5, 8, 6, 10, 12, 9, 11] }
+      ];
+    } else if (period === 'weekly') {
+      // Last 4 weeks
+      const today = new Date();
+      labels = Array.from({length: 4}, (_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() - (3 - i) * 7);
+        const weekStart = new Date(d);
+        weekStart.setDate(d.getDate() - d.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        return `${weekStart.getDate()}/${weekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}`;
+      });
+      
+      seriesData = [
+        { name: 'Sales', data: [85, 92, 78, 95] },
+        { name: 'Service', data: [65, 72, 58, 75] },
+        { name: 'Consultation', data: [35, 42, 38, 45] }
+      ];
+    } else {
+      // Monthly (default) - last 6 months
+      const today = new Date();
+      labels = Array.from({length: 6}, (_, i) => {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - (5 - i));
+        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      });
+      
+      seriesData = [
+        { name: 'Sales', data: [320, 290, 350, 380, 410, 390] },
+        { name: 'Service', data: [280, 260, 300, 320, 350, 330] },
+        { name: 'Consultation', data: [150, 180, 200, 210, 230, 220] }
+      ];
+    }
+    
     const option = {
       ...chartThemes,
       tooltip: {
@@ -1296,7 +1382,7 @@ function initServicePerformanceChart() {
       },
       legend: {
         ...chartThemes.legend,
-        data: chartData.serviceTrend.series.map(s => s.name)
+        data: seriesData.map(s => s.name)
       },
       grid: {
         ...chartThemes.grid,
@@ -1306,7 +1392,7 @@ function initServicePerformanceChart() {
         {
           type: 'category',
           boundaryGap: false,
-          data: chartData.serviceTrend.days
+          data: labels
         }
       ],
       yAxis: [
@@ -1314,7 +1400,7 @@ function initServicePerformanceChart() {
           type: 'value'
         }
       ],
-      series: chartData.serviceTrend.series.map((s, i) => ({
+      series: seriesData.map((s, i) => ({
         name: s.name,
         type: 'line',
         stack: 'Total',
@@ -1335,8 +1421,8 @@ function initServicePerformanceChart() {
         }
       }))
     };
-    chart.setOption(option);
-    window.addEventListener('resize', chart.resize);
+    
+    serviceTrendChart.setOption(option, true);
   }
 
   // Service Distribution Chart

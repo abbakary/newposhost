@@ -213,8 +213,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Form validation + duplicate customer check (Step 1)
-    const form = document.querySelector('form');
+    // Form validation + duplicate customer check (Step 1) + AJAX navigation/submission
+    const wizardContainer = document.getElementById('registrationWizard');
+    const form = wizardContainer ? wizardContainer.querySelector('form') : document.querySelector('form');
+
     async function checkDuplicateCustomer() {
         const nameEl = document.getElementById('id_full_name');
         const phoneEl = document.getElementById('id_phone');
@@ -255,46 +257,115 @@ document.addEventListener('DOMContentLoaded', function() {
         bsModal.show();
     }
 
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            let isValid = true;
-            const requiredFields = form.querySelectorAll('[required]');
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
+    // Helper: replace wizard HTML with smooth transition
+    function replaceWizardHtml(html) {
+        if (!wizardContainer) return;
+        wizardContainer.style.opacity = '0.4';
+        wizardContainer.style.transition = 'opacity 150ms ease';
+        setTimeout(() => {
+            wizardContainer.innerHTML = html;
+            wizardContainer.style.opacity = '1';
+            // Re-bind handlers after DOM replace
+            bindWizardHandlers();
+        }, 150);
+    }
+
+    // AJAX navigate to a step (GET)
+    async function ajaxLoadStep(url) {
+        const u = new URL(url, window.location.origin);
+        u.searchParams.set('load_step', '1');
+        const res = await fetch(u.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.form_html) replaceWizardHtml(data.form_html);
+        // Update URL without reload so back/forward works
+        history.pushState({}, '', url);
+    }
+
+    // AJAX submit the wizard form (POST)
+    async function ajaxSubmitForm(currentForm) {
+        const formData = new FormData(currentForm);
+        const res = await fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+            return;
+        }
+        if (data.form_html) replaceWizardHtml(data.form_html);
+        if (data.message && data.message_type) {
+            // Optionally show toast or inline alert; minimal inline alert here
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${data.message_type} mt-2`;
+            alert.textContent = data.message;
+            wizardContainer.prepend(alert);
+            setTimeout(() => alert.remove(), 3500);
+        }
+    }
+
+    // Bind click handlers for step links and submit handler
+    function bindWizardHandlers() {
+        const container = document.getElementById('registrationWizard');
+        if (!container) return;
+
+        // Intercept step navigation links
+        container.querySelectorAll('[data-step-link="true"]').forEach(a => {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                ajaxLoadStep(this.href);
             });
-            if (!isValid) {
-                e.preventDefault();
-                const firstInvalid = form.querySelector('.is-invalid');
-                if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-            const stepInput = form.querySelector('input[name="step"]');
-            const currentStep = stepInput ? parseInt(stepInput.value, 10) : null;
-            if (currentStep === 1) {
-                e.preventDefault();
-                const result = await checkDuplicateCustomer();
-                if (result && result.exists) {
-                    showExistingCustomerModal(result);
+        });
+
+        // Intercept form submission for all steps
+        const currentForm = container.querySelector('form');
+        if (currentForm) {
+            currentForm.addEventListener('submit', async function(e) {
+                // Basic required validation
+                let isValid = true;
+                const requiredFields = currentForm.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (!field.value || (field.type === 'checkbox' && !field.checked)) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+                if (!isValid) {
+                    e.preventDefault();
+                    const firstInvalid = currentForm.querySelector('.is-invalid');
+                    if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 }
-                // Re-submit with original submitter preserved
-                const submitter = e.submitter;
-                if (submitter && submitter.name) {
-                    const hidden = document.createElement('input');
-                    hidden.type = 'hidden';
-                    hidden.name = submitter.name;
-                    hidden.value = submitter.value;
-                    form.appendChild(hidden);
+
+                const stepInput = currentForm.querySelector('input[name="step"]');
+                const currentStep = stepInput ? parseInt(stepInput.value, 10) : null;
+
+                // For step 1, check duplicates before progressing
+                if (currentStep === 1) {
+                    e.preventDefault();
+                    const result = await checkDuplicateCustomer();
+                    if (result && result.exists) {
+                        showExistingCustomerModal(result);
+                        return;
+                    }
+                    await ajaxSubmitForm(currentForm);
+                    return;
                 }
-                form.submit();
-            }
-        });
+
+                // Default: AJAX submit
+                e.preventDefault();
+                await ajaxSubmitForm(currentForm);
+            });
+        }
     }
+
+    // Initial bind on first page load
+    bindWizardHandlers();
 
     // Auto-save form data
     function saveFormData() {
